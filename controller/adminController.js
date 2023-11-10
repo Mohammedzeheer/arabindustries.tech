@@ -4,31 +4,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt')
 
 
-const Login = async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        const admin = await adminCollection.findOne({ username });
 
-        if (admin) {
-            if (admin.password === password) {
-                console.log("Logged in successfully");
-                const token = jwt.sign({ sub: admin._id }, 'Key', { expiresIn: '3d' })
-                res.json({ admin: true, token })
-            } else {
-                console.log("Invalid password");
-                const errors = { username: 'Invalid password' }
-                res.json({ errors, admin: false })
-            }
-        } else {
-            console.log("Username not found");
-            const errors = { username: 'Username not found' }
-            res.json({ errors, admin: false })
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Error during login" });
-    }
-};
 
 
 const Register = async (req, res) => {
@@ -37,20 +13,17 @@ const Register = async (req, res) => {
         const checkusername = await adminCollection.find({ username: username });
 
         if (checkusername.length > 0) {
-            const errors = { email: 'email already exists' };
-            return res.status(400).json({ errors });
+            return res.status(400).json({ message: 'username already exists' });
         }
 
         const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
         const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
 
         if (!usernameRegex.test(username)) {
-            const errors = { username: 'Enter a valid username' };
-            return res.status(400).json({ errors });
+            return res.status(400).json({ message: 'Enter a valid username' });
         }
         if (!passwordRegex.test(password)) {
-            const errors = { password: 'Enter a valid password' };
-            return res.status(400).json({ errors });
+            return res.status(400).json({ message: 'Enter a valid password'});
         }
         else {
             password = password ? await bcrypt.hash(password, 10) : null;
@@ -58,10 +31,36 @@ const Register = async (req, res) => {
             res.status(201).json({ user: data });
         }
     } catch (error) {
-        return res.status(500).json({ error, message: "Internal server error" });
+        return res.status(500).json({error, message: "Internal server error" });
     }
 };
 
+
+const Login = async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        if(username == '' || password=='') {
+          return res.status(400).json({message:'Empty Field'});
+        }
+        else if (username === undefined) {
+            return res.status(400).json({message:'username required'});
+        } else if (password === undefined) {
+            return res.status(400).json({ message:'Password required'});
+        }       
+        const user = await adminCollection.findOne({ username: username });      
+        if (!user) {
+            return res.status(401).json({message:'Incorrect username'});
+        }  
+        const auth = await bcrypt.compare(password, user.password);
+        if (!auth) {
+            return res.status(401).json({ message:'Incorrect password'});
+        }      
+        const token = jwt.sign({ id: user._id }, process.env.ADMIN_TOKEN_SECRET, { expiresIn: '3d' });
+        res.json({ login: true, token, user });
+    } catch (error) {
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
 
 const UsersList = async (req, res) => {
     try {

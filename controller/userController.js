@@ -6,36 +6,32 @@ const cloudinary = require('../helpers/cloudinary')
 const Register = async (req, res) => {
     try {
       let { username, email, password } = req.body;
-  
       const checkusername = await userCollection.find({ username: username });
-  
-      if (checkusername.length > 0) {
-        const errors = { email: 'email already exists' };
-        return res.status(400).json({ errors});
+      if (checkusername) {
+        return res.status(400).json({ message:`username already exists`});
       }
   
       const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
       const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+
   
       if (!usernameRegex.test(username)) {
-        const errors = { username: 'Enter a valid username' };
-        return res.status(400).json({ errors});
-      } 
-      if (!passwordRegex.test(password)) {
-        const errors = { password: 'Enter a valid password' };
-        return res.status(400).json({ errors});
+        return res.status(400).json({ message: 'Enter a valid username' });
       } 
       if (!emailRegex.test(email)) {
-        const errors = { email: 'Enter a valid email' };
-        return res.status(400).json({ errors});
-      } else {
+        return res.status(400).json({message: 'Enter a valid email'});
+      }
+      if (!passwordRegex.test(password)) {
+        return res.status(400).json({message: 'Enter a valid password'});
+      }  
+      else {
         password = password ? await bcrypt.hash(password, 10) : null;
         const data = await userCollection.insertMany([{ username, email, password }]);
         res.status(201).json({ user: data});
       }
     } catch (error) {
-      console.error(error);
       return res.status(500).json({ error, message: "Internal server error" });
     }
   };

@@ -6,11 +6,6 @@ const cloudinary = require('../helpers/cloudinary')
 const Register = async (req, res) => {
     try {
       let { username, email, password } = req.body;
-      userdata = {
-        username: username,
-        email: email,
-        password: password
-      }
   
       const checkusername = await userCollection.find({ username: username });
   

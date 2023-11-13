@@ -8,8 +8,8 @@ const bcrypt = require('bcrypt')
 
 
 const Register = async (req, res) => {
-    try {
-        let { username, password } = req.body;
+    try {    
+        let { username,password } = req.query || req.body ;
         const checkusername = await adminCollection.find({ username: username });
 
         if (checkusername.length > 0) {
@@ -38,7 +38,7 @@ const Register = async (req, res) => {
 
 const Login = async (req, res) => {
     try {
-        const { username, password } = req.body;
+        let { username,password } = req.query || req.body ;
         if(username == '' || password=='') {
           return res.status(400).json({message:'Empty Field'});
         }

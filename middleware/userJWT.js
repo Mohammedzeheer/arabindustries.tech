@@ -8,7 +8,6 @@ const jwtUser = (req, res, next) => {
     if (token) {
         try {
             const decodedToken = jwt.verify(token, process.env.USER_TOKEN_SECRET);
-
             if (decodedToken.exp > Date.now() / 1000) {
                 next();
             } else {

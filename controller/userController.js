@@ -5,17 +5,16 @@ const cloudinary = require('../helpers/cloudinary')
 
 const Register = async (req, res) => {
     try {
-      let { username, email, password } = req.body;
+      let { username, email, password } = req.query || req.body ;
+
       const checkusername = await userCollection.find({ username: username });
-      if (checkusername) {
+      if (checkusername.length>0) {
         return res.status(400).json({ message:`username already exists`});
       }
-  
       const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+      // const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
-      // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-
   
       if (!usernameRegex.test(username)) {
         return res.status(400).json({ message: 'Enter a valid username' });
@@ -40,7 +39,7 @@ const Register = async (req, res) => {
 
 const Login = async (req, res) => {
     try {
-        const { username, password } = req.body;
+        let { username, password } = req.query || req.body ;
         if(username == '' || password=='') {
           return res.status(400).json({message:'Empty Field'});
         }
@@ -68,7 +67,7 @@ const Login = async (req, res) => {
 
 const imageUpload= async (req,res,next)=>{
     try{
-        const {userId}=req.body
+        const {userId}=req.query || req.body
 
         const files = req.files?.map((file) => file.path);
         const cloudinaryUploadPromises = files.map((filePath) =>
